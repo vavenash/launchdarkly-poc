@@ -1,0 +1,60 @@
+name: Create LaunchDarkly Feature Flag
+
+on:
+  workflow_dispatch:
+    inputs:
+      flag_name:
+        description: 'Feature flag name'
+        required: true
+        type: string
+      flag_key:
+        description: 'Feature flag key'
+        required: true
+        type: string
+      description:
+        description: 'Feature flag description'
+        required: false
+        type: string
+      temporary:
+        description: 'Is this a temporary flag?'
+        required: false
+        type: boolean
+      flag_type:
+        description: 'Flag type'
+        required: true
+        type: choice
+        options:
+          - boolean
+          - string
+          - number
+          - json
+      tags:
+        description: 'Tags (comma separated)'
+        required: false
+        type: string
+
+jobs:
+  create-flag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Feature Flag via LaunchDarkly API
+        env:
+          LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
+        run: |
+          curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}" \
+            -H "Authorization: $LD_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "${{ github.event.inputs.flag_name }}",
+              "key": "${{ github.event.inputs.flag_key }}",
+              "description": "${{ github.event.inputs.description }}",
+              "temporary": ${{ github.event.inputs.temporary }},
+              "variations": [
+                {"value": true, "name": "True"},
+                {"value": false, "name": "False"}
+              ],
+              "tags": [${{ github.event.inputs.tags }}],
+              "maintainer": "admin",
+              "config": {"kill_switch": true},
+              "kind": "${{ github.event.inputs.flag_type }}"
+            }'
