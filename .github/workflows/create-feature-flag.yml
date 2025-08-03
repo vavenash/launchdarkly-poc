@@ -41,31 +41,32 @@ jobs:
         env:
           LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
         run: |
+          jq -n \
+            --arg name "${{ github.event.inputs.flag_name }}" \
+            --arg key "${{ github.event.inputs.flag_key }}" \
+            --arg description "${{ github.event.inputs.description }}" \
+            --argjson temporary "${{ github.event.inputs.temporary }}" \
+            --arg kind "${{ github.event.inputs.flag_type }}" \
+            --arg tags "${{ github.event.inputs.tags }}" \
+            '{
+              name: $name,
+              key: $key,
+              description: $description,
+              temporary: $temporary,
+              tags: ($tags | split(",") | map(.)),
+              maintainer: "admin",
+              config: {kill_switch: true},
+              kind: $kind,
+              variations: [
+                {"value": true, "name": "True"},
+                {"value": false, "name": "False"}
+              ],
+              clientSideAvailability: {
+                usingEnvironmentId: true,
+                usingMobileKey: true
+              }
+            }' > flag.json
           curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}" \
             -H "Authorization: $LD_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "$(jq -n \
-              --arg name \"${{ github.event.inputs.flag_name }}\" \
-              --arg key \"${{ github.event.inputs.flag_key }}\" \
-              --arg description \"${{ github.event.inputs.description }}\" \
-              --argjson temporary ${{ github.event.inputs.temporary }} \
-              --arg kind \"${{ github.event.inputs.flag_type }}\" \
-              --arg tags \"${{ github.event.inputs.tags }}\" \
-              '{
-                name: $name,
-                key: $key,
-                description: $description,
-                temporary: $temporary,
-                tags: ($tags | split(",") | map(.)),
-                maintainer: \"admin\",
-                config: {kill_switch: true},
-                kind: $kind,
-                variations: [
-                  {value: true, name: \"True\"},
-                  {value: false, name: \"False\"}
-                ],
-                clientSideAvailability: {
-                  usingEnvironmentId: true,
-                  usingMobileKey: true
-                }
-              }'")
+            -d @flag.json
