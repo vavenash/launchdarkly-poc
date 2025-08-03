@@ -33,7 +33,7 @@ on:
         required: false
         type: string
       dryRun:
-        description: 'Dry run (simulate creation, do not apply changes)'
+        description: 'Dry run (simulate flag creation)'
         required: false
         type: boolean
 

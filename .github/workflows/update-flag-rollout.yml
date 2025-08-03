@@ -29,7 +29,7 @@ on:
         required: true
         type: number
       dryRun:
-        description: 'Dry run (simulate rollout, do not apply changes)'
+        description: 'Dry run (simulate rollout)'
         required: false
         type: boolean
 
