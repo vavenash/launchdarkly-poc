@@ -41,20 +41,26 @@ jobs:
         env:
           LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
         run: |
-          curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}" \
-            -H "Authorization: $LD_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "name": "${{ github.event.inputs.flag_name }}",
-              "key": "${{ github.event.inputs.flag_key }}",
-              "description": "${{ github.event.inputs.description }}",
-              "temporary": ${{ github.event.inputs.temporary }},
-              "variations": [
-                {"value": true, "name": "True"},
-                {"value": false, "name": "False"}
-              ],
-              "tags": [${{ github.event.inputs.tags }}],
-              "maintainer": "admin",
-              "config": {"kill_switch": true},
-              "kind": "${{ github.event.inputs.flag_type }}"
-            }'
+          curl -X POST https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }} \
+     -H "Authorization: $LD_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{
+  "name": "${{ github.event.inputs.flag_name }}",
+  "key": "${{ github.event.inputs.flag_key }}",
+  "description": "${{ github.event.inputs.description }}",
+  "temporary": ${{ github.event.inputs.temporary }},
+  "tags": [${{ github.event.inputs.tags }}],
+  "maintainer": "admin",
+  "config": {
+    "kill_switch": true
+  },
+  "kind": "${{ github.event.inputs.flag_type }}",
+  "variations": [
+    {"value": true,"name": "True"},
+    {"value": false,"name": "False"}
+  ],
+  "clientSideAvailability": {
+    "usingEnvironmentId": true,
+    "usingMobileKey": true
+  }
+}'
