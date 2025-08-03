@@ -1,0 +1,73 @@
+
+name: LaunchDarkly Progressive Rollout Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      flag_key:
+        description: 'Feature flag key to progressively rollout'
+        required: true
+        type: string
+      environment_key:
+        description: 'Environment key (e.g., production, staging)'
+        required: true
+        type: string
+      initial_percentage:
+        description: 'Initial rollout percentage (0-100)'
+        required: true
+        type: number
+      increment_percentage:
+        description: 'Increment percentage for each step (e.g., 10)'
+        required: true
+        type: number
+      increment_duration:
+        description: 'Duration between increments (in minutes)'
+        required: true
+        type: number
+      final_percentage:
+        description: 'Final rollout percentage (0-100)'
+        required: true
+        type: number
+      dryRun:
+        description: 'Dry run (simulate rollout, do not apply changes)'
+        required: false
+        type: boolean
+
+jobs:
+  orchestrate-progressive-rollout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Progressive Rollout using LaunchDarkly Workflow Template
+        env:
+          LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
+        run: |
+          current_percentage=${{ github.event.inputs.initial_percentage }}
+          final_percentage=${{ github.event.inputs.final_percentage }}
+          increment=${{ github.event.inputs.increment_percentage }}
+          duration=${{ github.event.inputs.increment_duration }}
+          flag_key="${{ github.event.inputs.flag_key }}"
+          environment_key="${{ github.event.inputs.environment_key }}"
+          dry_run="${{ github.event.inputs.dryRun }}"
+
+          if [ "$dry_run" = "true" ]; then
+            api_suffix="?dryRun=true"
+            echo "Dry run enabled: API calls will simulate rollout only."
+          else
+            api_suffix=""
+          fi
+
+          while [ "$current_percentage" -le "$final_percentage" ]; do
+            jq -n \
+              --argjson percentage "$current_percentage" \
+              '{targets: [{values: ["*"], variation: 0, rollout: $percentage}]}' > rollout.json
+            curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}/${flag_key}/environments/${environment_key}${api_suffix}" \
+              -H "Authorization: $LD_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d @rollout.json
+            echo "Rolled out $current_percentage% to $flag_key in $environment_key (dryRun=$dry_run)"
+            if [ "$current_percentage" -ge "$final_percentage" ]; then
+              break
+            fi
+            current_percentage=$((current_percentage + increment))
+            sleep $((duration * 60))
+          done

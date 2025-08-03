@@ -32,6 +32,10 @@ on:
         description: 'Tags (comma separated)'
         required: false
         type: string
+      dryRun:
+        description: 'Dry run (simulate creation, do not apply changes)'
+        required: false
+        type: boolean
 
 jobs:
   create-flag:
@@ -66,7 +70,14 @@ jobs:
                 usingMobileKey: true
               }
             }' > flag.json
-          curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}" \
+          dry_run="${{ github.event.inputs.dryRun }}"
+          if [ "$dry_run" = "true" ]; then
+            api_suffix="?dryRun=true"
+            echo "Dry run enabled: API call will simulate feature flag creation."
+          else
+            api_suffix=""
+          fi
+          curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}${api_suffix}" \
             -H "Authorization: $LD_API_KEY" \
             -H "Content-Type: application/json" \
             -d @flag.json
