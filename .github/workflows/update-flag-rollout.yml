@@ -1,5 +1,5 @@
 
-name: LaunchDarkly Progressive Rollout Workflow
+name: Progressive Rollout Workflow
 
 on:
   workflow_dispatch:

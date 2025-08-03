@@ -1,4 +1,4 @@
-name: Create LaunchDarkly Feature Flag
+name: Create Feature Flag
 
 on:
   workflow_dispatch:
