@@ -1,0 +1,51 @@
+name: Turn Feature Flag ON / OFF
+
+on:
+  workflow_dispatch:
+    inputs:
+      flag_key:
+        description: 'Feature flag key'
+        required: true
+        type: string
+      flag_update:
+        description: 'Update Feature Flag to On/Off'
+        required: true
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      dryRun:
+        description: 'Dry run (simulate flag creation)'
+        required: false
+        type: boolean
+
+jobs:
+  create-flag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Feature Flag via LaunchDarkly API
+        env:
+          LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
+        run: |
+          # Set the flag value based on input
+          FLAG_KEY="${{ github.event.inputs.flag_key }}"
+          FLAG_VALUE="${{ github.event.inputs.flag_update }}"
+          LD_PROJECT_KEY="${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}"
+
+          # Build the JSON payload for the patch
+          jq -n --argjson value "${FLAG_VALUE}" '{patch: [{op: "replace", path: "/environments/'"${LD_ENV_KEY}"'/on", value: $value}]}' > patch.
+          
+          dry_run="${{ github.event.inputs.dryRun }}"
+          if [ "$dry_run" = "true" ]; then
+            api_suffix="?dryRun=true"
+            echo "Dry run enabled: API call will simulate feature flag creation."
+          else
+            api_suffix=""
+          fi
+
+          # Make the API call to update the flag
+          curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${LD_PROJECT_KEY}/${FLAG_KEY}${api_suffix}" \
+            -H "Authorization: $LD_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @patch.json
+            
