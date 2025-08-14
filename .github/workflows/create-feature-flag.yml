@@ -1,4 +1,4 @@
-name: Create Feature Flag 
+name: Create Feature Flag  - ${{ inputs.flag_name }} ${{ inputs.dryRun }}
 
 on:
   workflow_dispatch:
