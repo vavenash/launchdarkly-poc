@@ -1,4 +1,4 @@
-name: Enable/Disable Feature Flag
+name: Check Feature Flag Toggle Status
 
 on:
   workflow_dispatch:
@@ -7,13 +7,6 @@ on:
         description: 'Feature flag key'
         required: true
         type: string
-      flag_update:
-        description: 'Update Feature Flag to Enable(true) / Disable (false)'
-        required: true
-        type: choice
-        options:
-          - 'true'
-          - 'false'
       environment: 
         description: 'Update to Test/Production'
         required: true
@@ -32,16 +25,10 @@ jobs:
         run: |
           # Set the flag value based on input
           FLAG_KEY="${{ github.event.inputs.flag_key }}"
-          FLAG_VALUE="${{ github.event.inputs.flag_update }}"
           LD_PROJECT_KEY="${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}"
           LD_ENV_KEY="${{ github.event.inputs.environment }}"
 
-          # Build the JSON payload for the patch
-          jq -n --argjson value "${FLAG_VALUE}" '{patch: [{op: "replace", path: "/environments/'"${LD_ENV_KEY}"'/on", value: $value}]}' > patch.json
-
           # Make the API call to update the flag
-          curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${LD_PROJECT_KEY}/${FLAG_KEY}" \
-            -H "Authorization: $LD_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d @patch.json
+          curl "https://app.launchdarkly.com/api/v2/flag-statuses/${LD_PROJECT_KEY}/${LD_ENV_KEY}/${FLAG_KEY}" \
+            -H "Authorization: $LD_API_KEY" 
             
