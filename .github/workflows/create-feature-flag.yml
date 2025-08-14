@@ -1,6 +1,6 @@
 name: Create Feature Flag
 
-run-name: Create Feature Flag  - ${{ inputs.flag_name }} ${{ inputs.dryRun }}
+run-name: Create Feature Flag${{ inputs.dryRun == 'true' && ' (DRY RUN)' || '' }} - ${{ inputs.flag_name }}
 
 on:
   workflow_dispatch:
