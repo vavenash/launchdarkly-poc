@@ -19,7 +19,9 @@ jobs:
   create-flag:
     runs-on: ubuntu-latest
     steps:
-      - name: Update Feature Flag via LaunchDarkly API
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Get and Display Feature Flag Status via LaunchDarkly API
         env:
           LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
         run: |
@@ -28,7 +30,19 @@ jobs:
           LD_PROJECT_KEY="${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}"
           LD_ENV_KEY="${{ github.event.inputs.environment }}"
 
-          # Make the API call to update the flag
-          curl "https://app.launchdarkly.com/api/v2/flag-statuses/${LD_PROJECT_KEY}/${LD_ENV_KEY}/${FLAG_KEY}" \
-            -H "Authorization: $LD_API_KEY" 
+          # Make the API call to get the flag status
+          RESPONSE=$(curl -s "https://app.launchdarkly.com/api/v2/flag-statuses/${LD_PROJECT_KEY}/${LD_ENV_KEY}/${FLAG_KEY}" \
+            -H "Authorization: $LD_API_KEY")
+
+          # Parse the response to get the flag status (requires jq)
+          STATUS=$(echo "$RESPONSE" | jq -r '.environments[0].status')
+
+          # Write the status to the GitHub Actions job summary
+          echo "### LaunchDarkly Flag Status" >> $GITHUB_STEP_SUMMARY
+          echo "Flag: $FLAG_KEY" >> $GITHUB_STEP_SUMMARY
+          echo "Environment: $LD_ENV_KEY" >> $GITHUB_STEP_SUMMARY
+          echo "Status: $STATUS" >> $GITHUB_STEP_SUMMARY
+
+          # Optionally, print to log as well
+          echo "Flag status: $STATUS"
             
