@@ -14,6 +14,13 @@ on:
         options:
           - 'true'
           - 'false'
+      environment: 
+        description: 'Update to Test/Production'
+        required: true
+        type: choice
+        options: 
+          - 'test'
+          - 'production'
       dryRun:
         description: 'Dry run (simulate steps)'
         required: false
@@ -31,6 +38,7 @@ jobs:
           FLAG_KEY="${{ github.event.inputs.flag_key }}"
           FLAG_VALUE="${{ github.event.inputs.flag_update }}"
           LD_PROJECT_KEY="${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}"
+          LD_ENV_KEY="${{ github.events.inputs.environment }}"
 
           # Build the JSON payload for the patch
           jq -n --argjson value "${FLAG_VALUE}" '{patch: [{op: "replace", path: "/environments/'"${LD_ENV_KEY}"'/on", value: $value}]}' > patch.json
