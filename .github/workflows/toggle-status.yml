@@ -1,4 +1,4 @@
-name: Check Feature Flag Toggle Status
+name: Check Feature Flag Toggle Status - ${{ github.event.inputs.environment }}
 
 on:
   workflow_dispatch:

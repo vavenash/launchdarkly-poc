@@ -1,4 +1,4 @@
-name: Create Feature Flag
+name: Create Feature Flag  - ${{ github.event.inputs.flag_name }} ${{ github.event.inputs.dryRun }}
 
 on:
   workflow_dispatch:
