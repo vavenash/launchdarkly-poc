@@ -21,10 +21,6 @@ on:
         options: 
           - 'test'
           - 'production'
-      dryRun:
-        description: 'Dry run (simulate steps)'
-        required: false
-        type: boolean
 
 jobs:
   create-flag:
