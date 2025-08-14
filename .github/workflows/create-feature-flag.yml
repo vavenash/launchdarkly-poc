@@ -79,7 +79,19 @@ jobs:
           else
             api_suffix=""
           fi
-          curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}${api_suffix}" \
+          RESPONSE=$(curl -X POST "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}${api_suffix}" \
             -H "Authorization: $LD_API_KEY" \
             -H "Content-Type: application/json" \
-            -d @flag.json
+            -d @flag.json)
+          
+          # Parse the response to get the flag status (requires jq)
+          NAME=$(echo "$RESPONSE" | jq -r '.name')
+          KEY=$(echo "$RESPONSE" | jq -r '.key')
+
+          # Write the status to the GitHub Actions job summary
+          echo "### LaunchDarkly Flag Creation Status" >> $GITHUB_STEP_SUMMARY
+          echo "Flag Name: $NAME" >> $GITHUB_STEP_SUMMARY
+          echo "Flag Key: $KEY" >> $GITHUB_STEP_SUMMARY
+          echo "Config: Kill Switch" >> $GITHUB_STEP_SUMMARY
+          echo "Variations: true/false" >> $GITHUB_STEP_SUMMARY
+          
