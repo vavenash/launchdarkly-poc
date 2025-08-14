@@ -15,7 +15,7 @@ on:
           - 'true'
           - 'false'
       dryRun:
-        description: 'Dry run (simulate flag creation)'
+        description: 'Dry run (simulate steps)'
         required: false
         type: boolean
 
@@ -33,7 +33,7 @@ jobs:
           LD_PROJECT_KEY="${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}"
 
           # Build the JSON payload for the patch
-          jq -n --argjson value "${FLAG_VALUE}" '{patch: [{op: "replace", path: "/environments/'"${LD_ENV_KEY}"'/on", value: $value}]}' > patch.
+          jq -n --argjson value "${FLAG_VALUE}" '{patch: [{op: "replace", path: "/environments/'"${LD_ENV_KEY}"'/on", value: $value}]}' > patch.json
           
           dry_run="${{ github.event.inputs.dryRun }}"
           if [ "$dry_run" = "true" ]; then
