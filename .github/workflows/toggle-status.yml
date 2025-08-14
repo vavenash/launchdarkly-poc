@@ -19,8 +19,6 @@ jobs:
   create-flag:
     runs-on: ubuntu-latest
     steps:
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
       - name: Get and Display Feature Flag Status via LaunchDarkly API
         env:
           LD_API_KEY: ${{ secrets.LAUNCHDARKLY_API_KEY }}
@@ -35,7 +33,7 @@ jobs:
             -H "Authorization: $LD_API_KEY")
 
           # Parse the response to get the flag status (requires jq)
-          STATUS=$(echo "$RESPONSE" | jq -r '.environments[0].status')
+          STATUS=$(echo "$RESPONSE" | jq -r '.name')
 
           # Write the status to the GitHub Actions job summary
           echo "### LaunchDarkly Flag Status" >> $GITHUB_STEP_SUMMARY
