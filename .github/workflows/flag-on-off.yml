@@ -42,17 +42,9 @@ jobs:
 
           # Build the JSON payload for the patch
           jq -n --argjson value "${FLAG_VALUE}" '{patch: [{op: "replace", path: "/environments/'"${LD_ENV_KEY}"'/on", value: $value}]}' > patch.json
-          
-          dry_run="${{ github.event.inputs.dryRun }}"
-          if [ "$dry_run" = "true" ]; then
-            api_suffix="?dryRun=true"
-            echo "Dry run enabled: API call will simulate feature flag creation."
-          else
-            api_suffix=""
-          fi
 
           # Make the API call to update the flag
-          curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${LD_PROJECT_KEY}/${FLAG_KEY}${api_suffix}" \
+          curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${LD_PROJECT_KEY}/${FLAG_KEY}" \
             -H "Authorization: $LD_API_KEY" \
             -H "Content-Type: application/json" \
             -d @patch.json
