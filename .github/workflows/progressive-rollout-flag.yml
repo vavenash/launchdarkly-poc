@@ -56,18 +56,11 @@ jobs:
             api_suffix=""
           fi
 
-          while [ "$current_percentage" -le "$final_percentage" ]; do
-            jq -n \
-              --argjson percentage "$current_percentage" \
-              '{targets: [{values: ["*"], variation: 0, rollout: $percentage}]}' > rollout.json
-            curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}/${flag_key}/environments/${environment_key}${api_suffix}" \
-              -H "Authorization: $LD_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d @rollout.json
-            echo "Rolled out $current_percentage% to $flag_key in $environment_key (dryRun=$dry_run)"
-            if [ "$current_percentage" -ge "$final_percentage" ]; then
-              break
-            fi
-            current_percentage=$((current_percentage + increment))
-            sleep $((duration * 60))
-          done
+          jq -n \
+            --argjson percentage "${{ github.event.inputs.final_percentage }}" \
+            '{targets: [{values: ["*"], variation: 0, rollout: $percentage}]}' > rollout.json
+          curl -X PATCH "https://app.launchdarkly.com/api/v2/flags/${{ secrets.LAUNCHDARKLY_PROJECT_KEY }}/${flag_key}/environments/${environment_key}${api_suffix}" \
+            -H "Authorization: $LD_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @rollout.json
+          echo "Set rollout to ${{ github.event.inputs.final_percentage }}% for $flag_key in $environment_key (dryRun=$dry_run)"
