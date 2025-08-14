@@ -1,4 +1,6 @@
-name: Check Feature Flag Toggle Status - ${{ inputs.environment }}
+name: Check Feature Flag Toggle Status
+
+run-name: Check Feature Flag Toggle Status - ${{ inputs.environment }}
 
 on:
   workflow_dispatch:
